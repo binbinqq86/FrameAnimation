@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:oneshot="true">
+
+    <item android:drawable="@mipmap/yacht1" android:duration="0" />
+    <item android:drawable="@mipmap/yacht2" android:duration="0" />
+    <item android:drawable="@mipmap/yacht3" android:duration="0" />
+    <item android:drawable="@mipmap/yacht4" android:duration="0" />
+    <item android:drawable="@mipmap/yacht5" android:duration="0" />
+    <item android:drawable="@mipmap/yacht6" android:duration="0" />
+    <item android:drawable="@mipmap/yacht7" android:duration="0" />
+    <item android:drawable="@mipmap/yacht8" android:duration="0" />
+    <item android:drawable="@mipmap/yacht9" android:duration="0" />
+    <item android:drawable="@mipmap/yacht10" android:duration="0" />
+    <item android:drawable="@mipmap/yacht11" android:duration="0" />
+    <item android:drawable="@mipmap/yacht12" android:duration="0" />
+    <item android:drawable="@mipmap/yacht13" android:duration="0" />
+    <item android:drawable="@mipmap/yacht14" android:duration="0" />
+    <item android:drawable="@mipmap/yacht15" android:duration="0" />
+    <item android:drawable="@mipmap/yacht16" android:duration="0" />
+    <item android:drawable="@mipmap/yacht17" android:duration="0" />
+    <item android:drawable="@mipmap/yacht18" android:duration="0" />
+    <item android:drawable="@mipmap/yacht19" android:duration="0" />
+    <item android:drawable="@mipmap/yacht20" android:duration="0" />
+    <item android:drawable="@mipmap/yacht21" android:duration="0" />
+    <item android:drawable="@mipmap/yacht22" android:duration="0" />
+    <item android:drawable="@mipmap/yacht23" android:duration="0" />
+    <item android:drawable="@mipmap/yacht24" android:duration="0" />
+    <item android:drawable="@mipmap/yacht25" android:duration="0" />
+    <item android:drawable="@mipmap/yacht26" android:duration="0" />
+    <item android:drawable="@mipmap/yacht27" android:duration="0" />
+    <item android:drawable="@mipmap/yacht28" android:duration="0" />
+    <item android:drawable="@mipmap/yacht29" android:duration="0" />
+    <item android:drawable="@mipmap/yacht30" android:duration="0" />
+    <item android:drawable="@mipmap/yacht31" android:duration="0" />
+    <item android:drawable="@mipmap/yacht32" android:duration="0" />
+    <item android:drawable="@mipmap/yacht33" android:duration="0" />
+
+</animation-list>
