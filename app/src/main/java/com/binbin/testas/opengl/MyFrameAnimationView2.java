@@ -116,14 +116,15 @@ public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceVie
             mScreen.draw(gl,thisFrame.bitmap);
             frameNumber++;
         }else{
-            if (onAnimationListener != null) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (onAnimationListener != null) {
                         onAnimationListener.onAnimationEnd();
+                        onAnimationListener=null;//此处会多次进入，所以置空，保证只回调一次
                     }
-                });
-            }
+                }
+            });
         }
     }
     private void anim(GL10 gl){
