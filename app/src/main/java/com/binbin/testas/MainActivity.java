@@ -95,7 +95,7 @@ playGif(R.mipmap.yacht_gif);
         for (int i = 0; i < count; i++) {
             int id = getResources().getIdentifier("yacht" + (i+1), "mipmap", getPackageName());
             res[i]=id;
-            duration[i]=30;
+            duration[i]=150;
         }
         String s1= Environment.getDataDirectory().getAbsolutePath();
         String s2=Environment.getRootDirectory().getAbsolutePath();
@@ -108,7 +108,7 @@ playGif(R.mipmap.yacht_gif);
 
                 sWidth=getWindow().getDecorView().findViewById(Window.ID_ANDROID_CONTENT).getWidth();
                 sHeight=getWindow().getDecorView().findViewById(Window.ID_ANDROID_CONTENT).getHeight();
-                handler.sendEmptyMessage(0);
+//                handler.sendEmptyMessage(0);
 //                MyFrameAnimation.getInstance().initAndPlayAnimation(iv,res,duration,2,true);
 //                MyFrameAnimation.getInstance().animateFromDrawableResource(res, duration, iv, new OnAnimationListener() {
 //                    @Override
@@ -129,17 +129,22 @@ playGif(R.mipmap.yacht_gif);
 //                animationDrawable.start();
 //                sceneAnimation=new SceneAnimation(iv,res,duration,1,false);
 //                MyAnimationDrawable.animateRawManuallyFromXML(R.anim.values,iv,null,null);
-//                MyAnimationDrawable.animateFromResource(res, new int[33], iv, new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Log.e("tianbin","=======start===========");
-//                    }
-//                }, new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        Log.e("tianbin","=======finish===========");
-//                    }
-//                });
+                MyAnimationDrawable.getInstance().animateFromDrawableResource(res, duration, iv, new OnAnimationListener() {
+                    @Override
+                    public void onDrawableLoaded(Object obj) {
+
+                    }
+
+                    @Override
+                    public void onAnimationStart() {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+
+                    }
+                });
             }
         },1000);
     }

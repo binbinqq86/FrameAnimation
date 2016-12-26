@@ -1,124 +1,85 @@
 package com.binbin.testas;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import android.content.Context;
 import android.content.res.XmlResourceParser;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.os.Handler;
-import org.apache.commons.io.IOUtils;
-
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 
-/****
- * 此工具类源于stack over flow
- * 原文链接:http://stackoverflow.com/questions/8692328/causing-outofmemoryerror-in-frame-by-frame-animation-in-android
- * 主要使用了BitmapFactory.decodeByteArray方法通过底层C来绘制图片,有效防止OOM
- * 使用了第三方类库:org.apache.commons.io.IOUtils,将Inputstream转为byte字节数组
- * *******/
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by -- on 2016/10/12.
+ * 三种方式加载逐帧动画，原理一样
+ */
+
 public class MyAnimationDrawable {
-
-    public static class MyFrame {
-        byte[] bytes;
-        int duration;
-        Drawable drawable;
-        boolean isReady = false;
+    private static final String TAG = "MyAnimationDrawable";
+    private static MyAnimationDrawable instance;
+    private static final Handler handler=new Handler(Looper.getMainLooper());
+    private MyAnimationDrawable(){}
+    public static synchronized MyAnimationDrawable getInstance(){
+        if(instance==null){
+            instance=new MyAnimationDrawable();
+        }
+        return instance;
     }
 
-    public interface OnDrawableLoadedListener {
-        public void onDrawableLoaded(List<MyFrame> myFrames);
-    }
+    private int times;
 
-    public static void animateFromResource(int resourceId[],int[] duration,
-                                                 final ImageView imageView, final Runnable onStart,
-                                                 final Runnable onComplete) {
-        loadFromResource(resourceId,duration, imageView.getContext(),
-                new OnDrawableLoadedListener() {
-                    @Override
-                    public void onDrawableLoaded(List<MyFrame> myFrames) {
-                        Log.e("tianbin","==========loaded============");
-                        if (onStart != null) {
-                            onStart.run();
+    public void initAndPlayAnimation(final ImageView mImageView,final int[] mResIds,final int[] mDurations, int times,final boolean canRepeat) {
+        this.times=times-1;
+        realPlay(mImageView,mResIds,mDurations,0,canRepeat);
+    }
+    private void realPlay(final ImageView mImageView,final int[] mResIds,final int[] mDurations,final int currFrameNo,final boolean canRepeat) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mImageView.setBackgroundResource(mResIds[currFrameNo]);
+                if (currFrameNo == mResIds.length-1) {
+                    if(canRepeat){
+                        realPlay(mImageView,mResIds,mDurations,0,canRepeat);
+                    }else{
+                        if(times>0){
+                            times--;
+                            realPlay(mImageView,mResIds,mDurations,0,canRepeat);
+                        }else{
+                            return;
                         }
-                        animateRawManually(myFrames, imageView, onComplete);
                     }
-                });
-    }
-    /***
-     * 性能更优
-     * 在animation-list中设置时间
-     * **/
-    public static void animateRawManuallyFromXML(int resourceId,
-                                                 final ImageView imageView, final Runnable onStart,
-                                                 final Runnable onComplete) {
-        loadRaw(resourceId, imageView.getContext(),
-                new OnDrawableLoadedListener() {
-                    @Override
-                    public void onDrawableLoaded(List<MyFrame> myFrames) {
-                        if (onStart != null) {
-                            onStart.run();
-                        }
-                        animateRawManually(myFrames, imageView, onComplete);
-                    }
-                });
-    }
-    private static void loadRaw(final int resourceId, final Context context,
-                                final OnDrawableLoadedListener onDrawableLoadedListener) {
-        loadFromXml(resourceId, context, onDrawableLoadedListener);
+                }else {
+                    realPlay(mImageView,mResIds,mDurations,currFrameNo + 1,canRepeat);
+                }
+            }
+        }, mDurations[currFrameNo]);
     }
 
-    private static void loadFromResource(final int[] resourceId,final int[] duration,final Context context,final OnDrawableLoadedListener onDrawableLoadedListener){
+    /**
+     * 从xml文件中加载并播放逐帧动画
+     * @param resourceId
+     * @param duration
+     * @param imageView
+     * @param onAnimationListener
+     */
+    public void animateFromXMLResource(final int resourceId, final int[] duration,final ImageView imageView, final OnAnimationListener onAnimationListener) {
         new Thread(){
             @Override
             public void run() {
                 super.run();
-                final ArrayList<MyFrame> myFrames=new ArrayList<MyFrame>();
-
-                byte[] bytes = null;
-
-                for (int i = 0; i < resourceId.length; i++) {
-                    try {
-                        bytes = IOUtils.toByteArray(context
-                                .getResources()
-                                .openRawResource(resourceId[i]));
-                        MyFrame myFrame = new MyFrame();
-                        myFrame.bytes = bytes;
-                        myFrame.duration = duration[i];
-                        myFrames.add(myFrame);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                new Handler(context.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (onDrawableLoadedListener != null) {
-                            onDrawableLoadedListener.onDrawableLoaded(myFrames);
-                        }
-                    }
-                });
-
-            }
-        }.start();
-    }
-
-    private static void loadFromXml(final int resourceId,
-                                    final Context context,
-                                    final OnDrawableLoadedListener onDrawableLoadedListener) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 final ArrayList<MyFrame> myFrames = new ArrayList<MyFrame>();
-
-                XmlResourceParser parser = context.getResources().getXml(
-                        resourceId);
+                XmlResourceParser parser = imageView.getContext().getApplicationContext().getResources().getXml(resourceId);
 
                 try {
                     int eventType = parser.getEventType();
@@ -129,21 +90,13 @@ public class MyAnimationDrawable {
 
                             if (parser.getName().equals("item")) {
                                 byte[] bytes = null;
-                                int duration = 1000;
-
+                                int duration = 0;
                                 for (int i = 0; i < parser.getAttributeCount(); i++) {
-                                    if (parser.getAttributeName(i).equals(
-                                            "drawable")) {
-                                        int resId = Integer.parseInt(parser
-                                                .getAttributeValue(i)
-                                                .substring(1));
-                                        bytes = IOUtils.toByteArray(context
-                                                .getResources()
-                                                .openRawResource(resId));
-                                    } else if (parser.getAttributeName(i)
-                                            .equals("duration")) {
-                                        duration = parser.getAttributeIntValue(
-                                                i, 1000);
+                                    if (parser.getAttributeName(i).equals("drawable")) {
+                                        int resId = Integer.parseInt(parser.getAttributeValue(i).substring(1));
+                                        bytes = toByteArray(imageView.getContext().getApplicationContext().getResources().openRawResource(resId));
+                                    } else if (parser.getAttributeName(i) .equals("duration")) {
+                                        duration = parser.getAttributeIntValue(i, 0);
                                     }
                                 }
 
@@ -167,173 +120,309 @@ public class MyAnimationDrawable {
                     // TODO: handle exception
                     e2.printStackTrace();
                 }
-
-                // Run on UI Thread
-                new Handler(context.getMainLooper()).post(new Runnable() {
+                handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (onDrawableLoadedListener != null) {
-                            onDrawableLoadedListener.onDrawableLoaded(myFrames);
+                        if (onAnimationListener != null) {
+                            onAnimationListener.onDrawableLoaded(myFrames);
+                            animateDrawableManually(myFrames,imageView,onAnimationListener,0);
+                            onAnimationListener.onAnimationStart();
                         }
                     }
                 });
+
             }
-        }).run();
+        }.start();
     }
 
-    private static void animateRawManually(List<MyFrame> myFrames,
-                                           ImageView imageView, Runnable onComplete) {
-        animateRawManually(myFrames, imageView, onComplete, 0);
+    /**
+     * 从drawable文件中加载并播发逐帧动画
+     * @param resourceId
+     * @param duration
+     * @param imageView
+     * @param onAnimationListener
+     */
+    public void animateFromDrawableResource(final int resourceId[], final int[] duration,final ImageView imageView, final OnAnimationListener onAnimationListener) {
+//        new Thread(){//加载资源属于耗时操作，放在子线程
+//            @Override
+//            public void run() {
+//                super.run();
+//                final ArrayList<MyFrame> myFrames=new ArrayList<MyFrame>();
+//
+//                byte[] bytes = null;
+//
+//                for (int i = 0; i < resourceId.length; i++) {
+//                    try {
+//                        bytes = OtherUtils.toByteArray(imageView.getContext().getApplicationContext().getResources().openRawResource(resourceId[i]));
+//                        MyFrame myFrame = new MyFrame();
+//                        myFrame.bytes = bytes;
+//                        myFrame.duration = duration[i];
+//                        myFrames.add(myFrame);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                handler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (onAnimationListener != null) {
+//                            onAnimationListener.onDrawableLoaded(myFrames);
+//                            animateDrawableManually(myFrames,imageView,onAnimationListener,0);
+//                            onAnimationListener.onAnimationStart();
+//                        }
+//                    }
+//                });
+//
+//            }
+//        }.start();
+
+        //新方案================================================
+//        if (onAnimationListener != null) {
+//            onAnimationListener.onDrawableLoaded(null);
+//            animateFrameDrawableResourceOneByOne(resourceId,duration,imageView,0,onAnimationListener);
+//            onAnimationListener.onAnimationStart();
+//        }
+
+        //================每次只加载一个，新方案，原来是一次性加载到内存中
+        animateDrawableManually(new BitmapFactory.Options(),resourceId,duration,new ArrayList<MyFrame>(),imageView,onAnimationListener,0);
     }
 
-    private static void animateRawManually(final List<MyFrame> myFrames,
-                                           final ImageView imageView, final Runnable onComplete,
-                                           final int frameNumber) {
+    private void animateFrameDrawableResourceOneByOne(final int resIds[], final int durations[], final ImageView imageView,final int frameNumber, final OnAnimationListener onAnimationListener){
+//        int width = Constants.getInt(Constants.SCREENWIDTH, 0);
+//        int height = Constants.getInt(Constants.SCREENHEIGHT, 0) - Constants.getInt(Constants.STATUSBARHEIGHT, 0);
+        if(frameNumber!=0){
+            Bitmap bit=imageView.getDrawingCache();
+            if(bit!=null){
+                bit.recycle();
+                bit=null;
+            }
+        }
+        imageView.setImageResource(resIds[frameNumber]);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if(frameNumber<resIds.length-1){
+                    animateFrameDrawableResourceOneByOne(resIds,durations,imageView,frameNumber+1,onAnimationListener);
+                }else{
+                    if (onAnimationListener != null) {
+                        onAnimationListener.onAnimationEnd();
+                    }
+                }
+            }
+        },durations[frameNumber]);
+    }
+    private void animateDrawableManually2(final int resIds[], final int durations[], final List<MyFrame> myFrame,final ImageView imageView, final OnAnimationListener onAnimationListener,final int frameNumber){
+        MyFrame thisFrame=null;
+        if(frameNumber!=0){
+            thisFrame=myFrame.get(1);
+            //回收之前的bitmap
+            MyFrame previousFrame = myFrame.get(0);
+            Bitmap pBit=((BitmapDrawable)previousFrame.drawable).getBitmap();
+            if(pBit!=null){
+                pBit.recycle();
+                pBit=null;
+            }
+            previousFrame.drawable=null;
+            previousFrame.bytes=null;
+            myFrame.remove(previousFrame);
+        }else{
+            thisFrame = new MyFrame();
+            try {
+                byte[] bytes = toByteArray(imageView.getContext().getApplicationContext().getResources().openRawResource(resIds[0]));
+                thisFrame.bytes = bytes;
+                thisFrame.duration = durations[0];
+                thisFrame.drawable=new BitmapDrawable(imageView.getContext().getApplicationContext().getResources(),BitmapFactory.decodeByteArray(thisFrame.bytes, 0, thisFrame.bytes.length));
+                myFrame.add(thisFrame);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        imageView.setImageDrawable(thisFrame.drawable);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (frameNumber < resIds.length-1) {
+                    //准备并播放下一帧
+                    try {
+                        byte[] bytes = toByteArray(imageView.getContext().getApplicationContext().getApplicationContext().getResources().openRawResource(resIds[frameNumber+1]));
+                        MyFrame nextFrame = new MyFrame();
+                        nextFrame.bytes = bytes;
+                        nextFrame.duration = durations[frameNumber+1];
+                        nextFrame.drawable=new BitmapDrawable(imageView.getContext().getApplicationContext().getResources(),BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                        myFrame.add(nextFrame);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    animateDrawableManually2(resIds,durations,myFrame, imageView, onAnimationListener, frameNumber + 1);
+                } else {
+                    if (onAnimationListener != null) {
+                        onAnimationListener.onAnimationEnd();
+                    }
+                }
+            }
+        }, thisFrame.duration);
+    }
+
+    /**
+     * 不进行回收，重用之前的bitmap
+     * @param resIds
+     * @param durations
+     * @param myFrame
+     * @param imageView
+     * @param onAnimationListener
+     * @param frameNumber
+     */
+    private void animateDrawableManually(final BitmapFactory.Options options,final int resIds[], final int durations[], final List<MyFrame> myFrame,final ImageView imageView, final OnAnimationListener onAnimationListener,final int frameNumber){
+        MyFrame thisFrame=null;
+        if(frameNumber==0){
+            thisFrame = new MyFrame();
+//            try {
+//                byte[] bytes = toByteArray(imageView.getContext().getApplicationContext().getResources().openRawResource(resIds[0]));
+//                thisFrame.bytes = bytes;
+                thisFrame.duration = durations[0];
+//                thisFrame.bitmap=BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                thisFrame.bitmap=BitmapFactory.decodeResource(imageView.getContext().getApplicationContext().getResources(),resIds[0],options);
+                myFrame.add(thisFrame);
+//                boolean can1=Utils.canUseForInBitmap(thisFrame.bitmap,options);
+//                Log.e(TAG, "run: "+can+"#"+can1);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+        }else{
+            thisFrame=myFrame.get(1);
+            myFrame.remove(0);
+        }
+
+        options.inMutable=true;
+        options.inSampleSize=1;
+        options.inBitmap=thisFrame.bitmap;
+        imageView.setImageBitmap(thisFrame.bitmap);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (frameNumber < resIds.length-1) {
+                    //准备并播放下一帧
+//                    try {
+//                        byte[] bytes = toByteArray(imageView.getContext().getApplicationContext().getApplicationContext().getResources().openRawResource(resIds[frameNumber+1]));
+                        MyFrame nextFrame = new MyFrame();
+//                        nextFrame.bytes = bytes;
+                        nextFrame.duration = durations[frameNumber+1];
+//                        nextFrame.bitmap=BitmapFactory.decodeByteArray(bytes, 0, bytes.length,options);
+                        nextFrame.bitmap=BitmapFactory.decodeResource(imageView.getContext().getApplicationContext().getResources(),resIds[frameNumber+1],options);
+//                        boolean can1=Utils.canUseForInBitmap(nextFrame.bitmap,options);
+//                        Log.e(TAG, "run: "+can1+"$$$"+can1);
+                        myFrame.add(nextFrame);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+                    animateDrawableManually(options,resIds,durations,myFrame, imageView, onAnimationListener, frameNumber + 1);
+                } else {
+                    if (onAnimationListener != null) {
+                        onAnimationListener.onAnimationEnd();
+                        options.inBitmap.recycle();
+                    }
+                }
+            }
+        }, thisFrame.duration);
+    }
+
+    /**
+     * 负责动画的播放
+     * @param myFrames
+     * @param imageView
+     * @param onAnimationListener
+     * @param frameNumber
+     */
+    private void animateDrawableManually(final List<MyFrame> myFrames, final ImageView imageView, final OnAnimationListener onAnimationListener, final int frameNumber) {
         final MyFrame thisFrame = myFrames.get(frameNumber);
 
         if (frameNumber == 0) {
-            thisFrame.drawable = new BitmapDrawable(imageView.getContext()
-                    .getResources(), BitmapFactory.decodeByteArray(
-                    thisFrame.bytes, 0, thisFrame.bytes.length));
+            thisFrame.drawable = new BitmapDrawable(imageView.getContext().getResources(), BitmapFactory.decodeByteArray(thisFrame.bytes, 0, thisFrame.bytes.length));
         } else {
+            //回收之前的bitmap
             MyFrame previousFrame = myFrames.get(frameNumber - 1);
-            ((BitmapDrawable) previousFrame.drawable).getBitmap().recycle();
+            Bitmap pBit=((BitmapDrawable) previousFrame.drawable).getBitmap();
+            if(pBit!=null){
+                pBit.recycle();
+                pBit=null;
+            }
             previousFrame.drawable = null;
+            previousFrame.bytes=null;
             previousFrame.isReady = false;
         }
 
         imageView.setImageDrawable(thisFrame.drawable);
-        new Handler().postDelayed(new Runnable() {
+        handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 // Make sure ImageView hasn't been changed to a different Image
                 // in this time
                 if (imageView.getDrawable() == thisFrame.drawable) {
-                    if (frameNumber + 1 < myFrames.size()) {
+                    if (frameNumber < myFrames.size()-1) {
                         MyFrame nextFrame = myFrames.get(frameNumber + 1);
-
                         if (nextFrame.isReady) {
-                            // Animate next frame
-                            animateRawManually(myFrames, imageView, onComplete,
-                                    frameNumber + 1);
+                            //播放下一帧
+                            animateDrawableManually(myFrames, imageView, onAnimationListener, frameNumber + 1);
                         } else {
                             nextFrame.isReady = true;
                         }
                     } else {
-                        if (onComplete != null) {
-                            onComplete.run();
+                        if (onAnimationListener != null) {
+                            onAnimationListener.onAnimationEnd();
                         }
                     }
                 }
             }
         }, thisFrame.duration);
 
-        // Load next frame
-        if (frameNumber + 1 < myFrames.size()) {
+        // 加载（准备）下一帧数据
+        if (frameNumber < myFrames.size()-1) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     MyFrame nextFrame = myFrames.get(frameNumber + 1);
                     nextFrame.drawable = new BitmapDrawable(imageView
-                            .getContext().getResources(),
+                            .getContext().getApplicationContext().getResources(),
                             BitmapFactory.decodeByteArray(nextFrame.bytes, 0,
                                     nextFrame.bytes.length));
                     if (nextFrame.isReady) {
-                        // Animate next frame
-                        animateRawManually(myFrames, imageView, onComplete,
-                                frameNumber + 1);
+                        //播放下一帧
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                animateDrawableManually(myFrames, imageView, onAnimationListener,frameNumber + 1);
+                            }
+                        });
                     } else {
                         nextFrame.isReady = true;
                     }
 
                 }
-            }).run();
+            }).start();
         }
     }
 
-    //第二种方法
-    /***
-     * 代码中控制时间,但不精确
-     * duration = 1000;
-     * ****/
-//    public static void animateManuallyFromRawResource(
-//            int animationDrawableResourceId, ImageView imageView,
-//            Runnable onStart, Runnable onComplete, int duration) throws IOException,
-//            XmlPullParserException {
-//        AnimationDrawable animationDrawable = new AnimationDrawable();
-//
-//        XmlResourceParser parser = imageView.getContext().getResources()
-//                .getXml(animationDrawableResourceId);
-//
-//        int eventType = parser.getEventType();
-//        while (eventType != XmlPullParser.END_DOCUMENT) {
-//            if (eventType == XmlPullParser.START_DOCUMENT) {
-//
-//            } else if (eventType == XmlPullParser.START_TAG) {
-//
-//                if (parser.getName().equals("item")) {
-//                    Drawable drawable = null;
-//
-//                    for (int i = 0; i < parser.getAttributeCount(); i++) {
-//                        if (parser.getAttributeName(i).equals("drawable")) {
-//                            int resId = Integer.parseInt(parser
-//                                    .getAttributeValue(i).substring(1));
-//                            byte[] bytes = IOUtils.toByteArray(imageView
-//                                    .getContext().getResources()
-//                                    .openRawResource(resId));//IOUtils.readBytes
-//                            drawable = new BitmapDrawable(imageView
-//                                    .getContext().getResources(),
-//                                    BitmapFactory.decodeByteArray(bytes, 0,
-//                                            bytes.length));
-//                        } else if (parser.getAttributeName(i)
-//                                .equals("duration")) {
-//                            duration = parser.getAttributeIntValue(i, 66);
-//                        }
-//                    }
-//
-//                    animationDrawable.addFrame(drawable, duration);
-//                }
-//
-//            } else if (eventType == XmlPullParser.END_TAG) {
-//
-//            } else if (eventType == XmlPullParser.TEXT) {
-//
-//            }
-//
-//            eventType = parser.next();
-//        }
-//
-//        if (onStart != null) {
-//            onStart.run();
-//        }
-//        animateDrawableManually(animationDrawable, imageView, onComplete, 0);
-//    }
-//
-//    private static void animateDrawableManually(
-//            final AnimationDrawable animationDrawable,
-//            final ImageView imageView, final Runnable onComplete,
-//            final int frameNumber) {
-//        final Drawable frame = animationDrawable.getFrame(frameNumber);
-//        imageView.setImageDrawable(frame);
-//        new Handler().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                // Make sure ImageView hasn't been changed to a different Image
-//                // in this time
-//                if (imageView.getDrawable() == frame) {
-//                    if (frameNumber + 1 < animationDrawable.getNumberOfFrames()) {
-//                        // Animate next frame
-//                        animateDrawableManually(animationDrawable, imageView,
-//                                onComplete, frameNumber + 1);
-//                    } else {
-//                        // Animation complete
-//                        if (onComplete != null) {
-//                            onComplete.run();
-//                        }
-//                    }
-//                }
-//            }
-//        }, animationDrawable.getDuration(frameNumber));
-//    }
+    public static class MyFrame {
+        byte[] bytes;
+        int duration;
+        Drawable drawable;
+        boolean isReady = false;
+        Bitmap bitmap;
+    }
 
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        long count = 0;
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        if (count > Integer.MAX_VALUE) {
+//            return -1;
+        }
+        return output.toByteArray();
+    }
 }
