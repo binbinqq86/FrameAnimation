@@ -295,7 +295,7 @@ public class MyAnimationDrawable {
         }
 
         options.inMutable=true;
-        options.inSampleSize=1;
+//        options.inSampleSize=1;
         options.inBitmap=thisFrame.bitmap;
         imageView.setImageBitmap(thisFrame.bitmap);
         handler.postDelayed(new Runnable() {
