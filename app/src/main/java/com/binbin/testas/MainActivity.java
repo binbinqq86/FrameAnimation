@@ -88,20 +88,14 @@ playGif(R.mipmap.yacht_gif);
         iv= (ImageView) findViewById(R.id.iv);
 //        gifTextureView= (GifImageView) findViewById(R.id.gif1);
 //        Glide.with(MainActivity.this).load(R.mipmap.yacht_gif).into(iv);
-        A a=new B();
-        a=new C();
-//        a.ccc();
+
         animationDrawable = new AnimationDrawable();
         for (int i = 0; i < count; i++) {
             int id = getResources().getIdentifier("yacht" + (i+1), "mipmap", getPackageName());
             res[i]=id;
             duration[i]=150;
         }
-        String s1= Environment.getDataDirectory().getAbsolutePath();
-        String s2=Environment.getRootDirectory().getAbsolutePath();
-        String s3=getCacheDir().getAbsolutePath();
-        String s4=getExternalCacheDir().getAbsolutePath();
-        Log.e("tianbin",s1+"\n"+s2+"\n"+s3+"\n"+s4);
+
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -129,22 +123,29 @@ playGif(R.mipmap.yacht_gif);
 //                animationDrawable.start();
 //                sceneAnimation=new SceneAnimation(iv,res,duration,1,false);
 //                MyAnimationDrawable.animateRawManuallyFromXML(R.anim.values,iv,null,null);
-                MyAnimationDrawable.getInstance().animateFromDrawableResource(res, duration, iv, new OnAnimationListener() {
-                    @Override
-                    public void onDrawableLoaded(Object obj) {
 
-                    }
+//                MyAnimationDrawable.getInstance().animateFromDrawableResource(res, duration, iv, new OnAnimationListener() {
+//                    @Override
+//                    public void onDrawableLoaded(Object obj) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onAnimationStart() {
+//
+//                    }
+//
+//                    @Override
+//                    public void onAnimationEnd() {
+//
+//                    }
+//                });
 
-                    @Override
-                    public void onAnimationStart() {
 
-                    }
-
-                    @Override
-                    public void onAnimationEnd() {
-
-                    }
-                });
+                //采用原生frame帧动画
+                iv.setBackgroundResource(R.drawable.values);
+                AnimationDrawable anim = (AnimationDrawable) iv.getBackground();
+                anim.start();
             }
         },1000);
     }
