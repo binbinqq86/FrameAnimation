@@ -12,6 +12,7 @@ import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -29,17 +30,17 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * 采用surfaceView加载逐帧动画
  */
-public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceView.Renderer{
+public class MyFrameAnimationOpenGL extends GLSurfaceView implements GLSurfaceView.Renderer{
     private OnAnimationListener onAnimationListener;
     private int resourceId[];
     private int[] duration;
-    private List<MyFrame> myFrames=new ArrayList<>();
     private Handler mHandler=new Handler(Looper.getMainLooper());
     private int frameNumber;
     private Screen mScreen;
     private long mLastTime;
     private boolean first=true;
-    public MyFrameAnimationView2(Context context, int resourceId[], int[] duration, OnAnimationListener onAnimationListener) {
+    private BitmapFactory.Options options;
+    public MyFrameAnimationOpenGL(Context context, int resourceId[], int[] duration, OnAnimationListener onAnimationListener) {
         super(context);
         this.onAnimationListener=onAnimationListener;
         this.resourceId=resourceId;
@@ -49,7 +50,7 @@ public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceVie
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);//修改GLSurfaceView颜色模式为有透明度选项的模式
         getHolder().setFormat(PixelFormat.TRANSLUCENT);//背景透明
         setRenderer(this);
-        loadResources();
+        options=new BitmapFactory.Options();
     }
 
     @Override
@@ -99,7 +100,7 @@ public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceVie
         gl.glLoadIdentity();
 
         gl.glTranslatef(0, 0, -4);
-//        Log.e("tianbin","======##################========"+frameNumber);
+        Log.e("tianbin","======##################========"+frameNumber);
         anim2(gl);
     }
     private void anim2(GL10 gl){
@@ -108,17 +109,22 @@ public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceVie
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(frameNumber<myFrames.size()-1){
-            final MyFrame thisFrame = myFrames.get(frameNumber);
-            if(thisFrame.bitmap==null||thisFrame.bitmap.isRecycled()){
-                thisFrame.bitmap =  BitmapFactory.decodeByteArray(thisFrame.bytes, 0, thisFrame.bytes.length);
-            }
-            mScreen.draw(gl,thisFrame.bitmap);
+        if(frameNumber<resourceId.length-1){
+            options.inMutable=true;
+            options.inSampleSize=1;
+            Bitmap bitmap=BitmapFactory.decodeResource(getResources(),resourceId[frameNumber],options);
+            options.inBitmap=bitmap;
+            mScreen.draw(gl,bitmap);
             frameNumber++;
         }else{
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    if(options!=null&&options.inBitmap!=null){
+                        options.inBitmap.recycle();
+                        options.inBitmap=null;
+                    }
+                    options=null;
                     if (onAnimationListener != null) {
                         onAnimationListener.onAnimationEnd();
                         onAnimationListener=null;//此处会多次进入，所以置空，保证只回调一次
@@ -127,89 +133,5 @@ public class MyFrameAnimationView2 extends GLSurfaceView implements GLSurfaceVie
             });
         }
     }
-    private void anim(GL10 gl){
-        int mLast=frameNumber;
-        if(frameNumber<myFrames.size()-1){
-            if(first){
-                mLastTime=System.currentTimeMillis();
-                first=false;
-            }else{
-                long time=System.currentTimeMillis();
-                long delta=time-mLastTime;
-                if(delta>=duration[frameNumber]){
-                    mLastTime=time;
-                    frameNumber++;
-                }
-            }
-            final MyFrame thisFrame = myFrames.get(frameNumber);
-            if(thisFrame.bitmap==null){
-                thisFrame.bitmap =  BitmapFactory.decodeByteArray(thisFrame.bytes, 0, thisFrame.bytes.length);
-            }
-            mScreen.draw(gl,thisFrame.bitmap);
-            if(frameNumber!=mLast){
-                //说明加载下一张图片，可以回收当前图片了
-                Bitmap bitmap=myFrames.get(mLast).bitmap;
-                if(bitmap!=null){
-                    bitmap.recycle();
-                }
-            }
-        }else{
-            if (onAnimationListener != null) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-//                        frameNumber=0;
-//                        first=true;
-                        onAnimationListener.onAnimationEnd();
-                    }
-                });
-            }
-        }
-    }
 
-    private void loadResources(){
-        byte[] bytes = null;
-
-        for (int i = 0; i < resourceId.length; i++) {
-            try {
-                bytes = toByteArray(getContext().getApplicationContext().getResources().openRawResource(resourceId[i]));
-                MyFrame myFrame = new MyFrame();
-                myFrame.bytes = bytes;
-                myFrame.duration = duration[i];
-                myFrames.add(myFrame);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        if (onAnimationListener != null) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    onAnimationListener.onDrawableLoaded(myFrames);
-                    onAnimationListener.onAnimationStart();
-                }
-            });
-        }
-    }
-
-    public static class MyFrame {
-        byte[] bytes;
-        int duration;
-        Bitmap bitmap;
-    }
-
-    public static byte[] toByteArray(InputStream input) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        long count = 0;
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            count += n;
-        }
-        if (count > Integer.MAX_VALUE) {
-//            return -1;
-        }
-        return output.toByteArray();
-    }
 }

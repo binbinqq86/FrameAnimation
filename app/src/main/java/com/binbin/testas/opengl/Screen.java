@@ -123,7 +123,7 @@ public class Screen {
         gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         // Disable the use of textures.
         gl.glDisable(GL10.GL_TEXTURE_2D);
-        bit.recycle();
+//        bit.recycle();
     }
 
     /**

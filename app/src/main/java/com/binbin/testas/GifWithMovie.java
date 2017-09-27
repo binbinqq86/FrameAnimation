@@ -19,6 +19,14 @@ public class GifWithMovie extends View {
     private Movie mMovie;
     private long mMovieStart = 0;
 
+    public GifWithMovie(Context context){
+        this(context,null);
+    
+    }
+    public GifWithMovie(Context context, AttributeSet attrs){
+        this(context,attrs,0);
+        
+    }
     public GifWithMovie(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         // TODO Auto-generated constructor stub

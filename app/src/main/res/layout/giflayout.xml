@@ -7,24 +7,22 @@
                 android:layout_height="match_parent"
                 tools:context="com.binbin.testas.MainActivity">
     
-    <!--<com.binbin.testas.GifWithMovie-->
-    <!--app:gif="@mipmap/yacht_gif"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent" />-->
+    <com.binbin.testas.GifWithMovie
+        android:id="@+id/movie"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:gif="@mipmap/yacht_gif"/>
     <!--<pl.droidsonroids.gif.GifImageView-->
     <!--android:id="@+id/gif1"-->
     <!--android:layout_width="match_parent"-->
     <!--android:layout_height="match_parent"-->
     <!--android:background="@mipmap/yacht_gif"/>-->
-    <!--<ImageView-->
-    <!--android:id="@+id/iv"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:text="Hello World!" />-->
-    <ListView
-        android:id="@+id/lv"
+    <ImageView
+        android:id="@+id/iv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:text="Hello World!"/>
+    <!---->
     <!--<TextView-->
     <!--android:layout_width="match_parent"-->
     <!--android:layout_height="match_parent"-->
