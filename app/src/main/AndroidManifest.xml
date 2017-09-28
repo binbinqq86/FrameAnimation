@@ -21,7 +21,8 @@
         <activity android:name=".GifActivity"
                   android:hardwareAccelerated="false"/>
         <activity android:name=".SurfaceViewActivity"/>
-        <activity android:name=".OpenGLActivity"/>
+        <activity android:name=".OpenGLActivity"
+            android:hardwareAccelerated="true"/>
     </application>
 
 </manifest>

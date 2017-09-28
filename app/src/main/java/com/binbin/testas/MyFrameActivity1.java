@@ -33,7 +33,7 @@ public class MyFrameActivity1 extends AppCompatActivity {
         for (int i = 0; i < count; i++) {
             int id = getResources().getIdentifier("yacht" + (i+1), "mipmap", getPackageName());
             res[i]=id;
-            duration[i]=150;
+            duration[i]=50;
         }
 
         new Handler().postDelayed(new Runnable() {
