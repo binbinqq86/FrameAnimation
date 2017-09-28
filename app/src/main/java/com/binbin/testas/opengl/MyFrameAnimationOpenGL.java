@@ -31,14 +31,13 @@ import javax.microedition.khronos.opengles.GL10;
  * 采用surfaceView加载逐帧动画
  */
 public class MyFrameAnimationOpenGL extends GLSurfaceView implements GLSurfaceView.Renderer{
+    private static final String TAG = "MyFrameAnimationOpenGL";
     private OnAnimationListener onAnimationListener;
     private int resourceId[];
     private int[] duration;
     private Handler mHandler=new Handler(Looper.getMainLooper());
     private int frameNumber;
     private Screen mScreen;
-    private long mLastTime;
-    private boolean first=true;
     private BitmapFactory.Options options;
     public MyFrameAnimationOpenGL(Context context, int resourceId[], int[] duration, OnAnimationListener onAnimationListener) {
         super(context);
@@ -100,7 +99,7 @@ public class MyFrameAnimationOpenGL extends GLSurfaceView implements GLSurfaceVi
         gl.glLoadIdentity();
 
         gl.glTranslatef(0, 0, -4);
-        Log.e("tianbin","======##################========"+frameNumber);
+//        Log.e("tianbin","======##################========"+frameNumber);
         anim2(gl);
     }
     private void anim2(GL10 gl){
@@ -112,10 +111,14 @@ public class MyFrameAnimationOpenGL extends GLSurfaceView implements GLSurfaceVi
         if(frameNumber<resourceId.length-1){
             options.inMutable=true;
             options.inSampleSize=1;
+//            Log.e(TAG, "anim2: "+frameNumber );
             Bitmap bitmap=BitmapFactory.decodeResource(getResources(),resourceId[frameNumber],options);
             options.inBitmap=bitmap;
             mScreen.draw(gl,bitmap);
             frameNumber++;
+            if(frameNumber==resourceId.length-1){
+                frameNumber=0;
+            }
         }else{
             mHandler.post(new Runnable() {
                 @Override
@@ -133,5 +136,16 @@ public class MyFrameAnimationOpenGL extends GLSurfaceView implements GLSurfaceVi
             });
         }
     }
-
+    
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if(options!=null&&options.inBitmap!=null){
+            options.inBitmap.recycle();
+            options.inBitmap=null;
+        }
+        options=null;
+        System.gc();
+        Log.e(TAG, "onDetachedFromWindow: ====" );
+    }
 }

@@ -44,6 +44,13 @@ public class OpenGLActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.opengllayout);
         
+//        for (int i = 0; i < count; i++) {
+//            String ids=(i+48)<100?("0"+(i+48)):(i+48+"");
+//            int id = getResources().getIdentifier("fudong1_00" + ids, "drawable", getPackageName());
+//            res[i]=id;
+//            duration[i]=50;
+//        }
+    
         for (int i = 0; i < count; i++) {
             int id = getResources().getIdentifier("yacht" + (i+1), "mipmap", getPackageName());
             res[i]=id;

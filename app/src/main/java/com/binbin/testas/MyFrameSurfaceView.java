@@ -95,6 +95,9 @@ public class MyFrameSurfaceView extends SurfaceView implements SurfaceHolder.Cal
                 e.printStackTrace();
             }
             frameNumber++;
+            if(frameNumber==resourceId.length-1){
+                frameNumber=0;
+            }
         }
         if(options.inBitmap!=null){
             options.inBitmap.recycle();
@@ -110,5 +113,16 @@ public class MyFrameSurfaceView extends SurfaceView implements SurfaceHolder.Cal
             });
         }
     }
-
+    
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if(options!=null&&options.inBitmap!=null){
+            options.inBitmap.recycle();
+            options.inBitmap=null;
+        }
+        options=null;
+        System.gc();
+        Log.e(TAG, "onDetachedFromWindow: ====" );
+    }
 }
